@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sổ Thu Chi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="static/css/style.css" />
+    <link rel="icon" type="image/png" href="static/images/favicon.png" />
+  </head>
+  <body>
+    <div id="fallingIconsContainer" aria-hidden="true">
+      <span>💰</span> <span>💸</span> <span>✨</span> <span>🎉</span>
+      <span>🪙</span> <span>📈</span> <span>💳</span> <span>🧾</span>
+      <span>💯</span> <span>🏦</span> <span>🎁</span> <span>🛍️</span>
+    </div>
+    <div class="container">
+      <div class="header">
+        <h1>💰Sổ Thu Chi💰</h1>
+        <p>Quản lý tài chính cá nhân với Supabase</p>
+      </div>
+
+      <div id="statusMessage" class="status loading">
+        <span class="loading-spinner"></span> Đang khởi tạo ứng dụng...
+      </div>
+
+      <div id="setupSection" class="setup-section hidden">
+        <h2>Cấu hình Supabase & Số dư ban đầu</h2>
+        <p>
+          Nhập thông tin Supabase và số dư ban đầu của bạn (chỉ cần làm lần
+          đầu):
+        </p>
+        <div class="setup-form">
+          <div class="form-group">
+            <label for="supabaseUrl">Supabase URL:</label>
+            <input
+              type="text"
+              id="supabaseUrl"
+              placeholder="https://your-project-ref.supabase.co"
+            />
+          </div>
+          <div class="form-group">
+            <label for="supabaseKey">Supabase Anon Key:</label>
+            <input
+              type="text"
+              id="supabaseKey"
+              placeholder="Supabase Anon Key (public)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="initialBalance">Số dư ban đầu (VNĐ):</label>
+            <input
+              type="number"
+              id="initialBalance"
+              placeholder="0"
+              value="0"
+              step="1000"
+            />
+          </div>
+          <button class="btn" id="connectSupabaseBtn">Lưu & Kết nối</button>
+        </div>
+        <div class="setup-guide">
+          <h4>Hướng dẫn setup Supabase:</h4>
+          <ol>
+            <li>
+              Tạo tài khoản tại
+              <a href="https://supabase.com" target="_blank">supabase.com</a>
+            </li>
+            <li>Tạo project mới.</li>
+            <li>Vào Project Settings → API để lấy URL và anon key.</li>
+            <li>Trong Supabase Studio, vào SQL Editor, chạy SQL sau:</li>
+          </ol>
+          <pre>
+-- Xóa bảng cũ nếu tồn tại để tránh lỗi khi chạy lại script
+DROP TABLE IF EXISTS transactions;
+
+CREATE TABLE transactions (
+  id BIGSERIAL PRIMARY KEY,
+  description TEXT NOT NULL,
+  amount DECIMAL(15,2) NOT NULL,
+  type VARCHAR(10) NOT NULL CHECK (type IN ('income', 'expense')),
+  category VARCHAR(50),
+  notes TEXT,
+  transaction_datetime TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all operations for demo" ON transactions
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+                </pre
+          >
+          <p class="note-important">
+            Lưu ý: SQL trên là ví dụ. Đối với ứng dụng thực tế, bạn cần thiết
+            lập Row Level Security (RLS) chặt chẽ hơn.
+          </p>
+        </div>
+      </div>
+
+      <div id="mainApp" class="hidden">
+        <div class="balance">
+          <div class="balance-item">
+            <h3>💚 Thu nhập</h3>
+            <div class="balance-amount income" id="totalIncome">0₫</div>
+          </div>
+          <div class="balance-item">
+            <h3>💸 Chi tiêu</h3>
+            <div class="balance-amount expense" id="totalExpense">0₫</div>
+          </div>
+          <div class="balance-item">
+            <h3>💎 Số dư (+ Ban đầu)</h3>
+            <div class="balance-amount total" id="totalBalance">0₫</div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h2>➕ Thêm giao dịch mới</h2>
+          <form id="transactionForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="description">📝 Mô tả:</label>
+                <input
+                  type="text"
+                  id="description"
+                  required
+                  placeholder="Ví dụ: Mua cà phê sáng"
+                />
+              </div>
+              <div class="form-group">
+                <label for="amount">💵 Số tiền:</label>
+                <input
+                  type="number"
+                  id="amount"
+                  required
+                  step="1000"
+                  placeholder="100000"
+                />
+              </div>
+              <div class="form-group">
+                <label for="type">📊 Loại:</label>
+                <select id="type" required>
+                  <option value="expense">💸 Chi tiêu</option>
+                  <option value="income">💰 Thu nhập</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="category">🏷️ Danh mục:</label>
+                <select id="category" required></select>
+              </div>
+              <div class="form-group">
+                <label for="transaction_datetime">
+                  <span class="label-icon">📅</span>
+                  <span class="label-text">Ngày & Giờ:</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  id="transaction_datetime"
+                  name="transaction_datetime"
+                />
+              </div>
+              <div class="form-group">
+                <label for="notes">📄 Ghi chú (tùy chọn):</label>
+                <textarea
+                  id="notes"
+                  rows="2"
+                  placeholder="Thêm ghi chú..."
+                ></textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn" id="submitBtn">
+              ➕ Thêm giao dịch
+            </button>
+          </form>
+        </div>
+
+        <div class="stats-section">
+          <h2>📊 Thống kê</h2>
+          <div class="form-group filter-group">
+            <label for="filterPeriod">📅 Xem theo:</label>
+            <select id="filterPeriod">
+              <option value="month">Tháng này</option>
+              <option value="last30days">30 ngày qua</option>
+              <option value="year">Năm nay</option>
+              <option value="all">Toàn bộ</option>
+            </select>
+          </div>
+          <div id="statsLoading" class="loading-indicator hidden">
+            Đang tính toán...
+          </div>
+          <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+              <div class="stat-number" id="totalTransactions">0</div>
+              <div class="stat-label">Tổng giao dịch (đã lọc)</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="avgExpense">0₫</div>
+              <div class="stat-label">Chi tiêu TB/ngày (đã lọc)</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="periodIncome">0₫</div>
+              <div class="stat-label">Thu nhập (đã lọc)</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="periodExpense">0₫</div>
+              <div class="stat-label">Chi tiêu (đã lọc)</div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <h3>Biểu đồ Thu vs Chi (12 tháng gần nhất)</h3>
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="transactions">
+          <h2>📋 Lịch sử giao dịch</h2>
+          <div id="transactionsList">
+            <div class="empty-state" id="transactionsEmptyState">
+              <div class="loading-spinner"></div>
+              <h3>Đang tải dữ liệu...</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="static/js/script.js"></script>
+  </body>
+</html>
