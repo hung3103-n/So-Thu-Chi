@@ -712,3 +712,37 @@ body {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
+.footer-section {
+  text-align: center;
+  padding: 2rem 1rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 2.5rem;
+  background-color: var(--bg-secondary);
+}
+
+.footer-section p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 0; 
+  line-height: 1.6;
+}
+
+.footer-section .footer-right-content {
+  display: inline-block; 
+  margin-left: 10px;
+}
+
+.footer-section .footer-heart { 
+  color: var(--expense-color); 
+  display: inline-block;
+  margin: 0 3px;
+  font-size: 1em; 
+}
+
+@media (max-width: 768px) {
+  .footer-section .footer-right-content {
+    margin-left: 0;
+    display: block; 
+    margin-top: 0.5rem;
+  }
+}
