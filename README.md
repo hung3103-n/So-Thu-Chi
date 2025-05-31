@@ -16,7 +16,7 @@
 * **Cập Nhật Real-time:** Các thay đổi dữ liệu (thêm, xóa giao dịch) được cập nhật gần như ngay lập tức trên các thiết bị khác đang mở ứng dụng.
 * **Cấu Hình Linh Hoạt:** Cho phép người dùng tự cấu hình Supabase URL, Anon Key và số dư ban đầu.
 * **Giao Diện Hiện Đại:** Thiết kế tối giản, dễ sử dụng với hiệu ứng động nhẹ nhàng.
-* **Favicon Tùy Chỉnh:** Sử dụng icon `favicon.png` (hoặc icon nâng tạ như đã được yêu cầu thay thế trước đó).
+* **Favicon Tùy Chỉnh:** Sử dụng icon `favicon.png` .
 
 ## 🛠️ Công Nghệ Sử Dụng
 
@@ -124,3 +124,18 @@ Bạn cần có một tài khoản Supabase và một project đã được tạ
 ---
 
 Chúc bạn quản lý tài chính hiệu quả với Sổ Thu Chi!
+
+---
+
+## 🧠 Người Phát Triển
+
+**Vũ Phạm Việt Hùng**
+
+* 📧 Email: [hungyknn310328@gmail.com](mailto:hungyknn310328@gmail.com)
+* 🌐 Website: [https://github.com/hung3103-n](https://github.com/hung3103-n)
+
+---
+
+## 📜 Giấy Phép
+
+Mã nguồn này được phát hành theo giấy phép [MIT License](https://opensource.org/licenses/MIT). Bạn có thể tùy ý sử dụng, chỉnh sửa, chia sẻ với cộng đồng.
